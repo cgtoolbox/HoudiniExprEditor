@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+
+-->
+
+<mainMenu>
+  <!-- menuDocument can only contain 1 menu element, whose id is 
+         implicitly "root_menu"
+      -->
+  <menu>
+
+    <!-- Set external editor -->
+
+    <addScriptItem id="set_external_editor">
+      <label>Set External Expressions Editor</label>
+      <parent>preferences_submenu</parent>
+      <insertAfter>h.prefs_misc</insertAfter>
+      <scriptCode>
+        <![CDATA[
+from HoudiniExprEditor import ParmWatcher
+reload(ParmWatcher)
+ParmWatcher.set_external_editor()]]>
+      </scriptCode>
+    </addScriptItem>
+
+  </menu>
+</mainMenu>

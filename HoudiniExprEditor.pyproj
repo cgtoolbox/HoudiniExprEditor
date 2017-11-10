@@ -32,6 +32,10 @@
     <Compile Include="HoudiniExprEditor\ParmWatcher.py" />
     <Compile Include="HoudiniExprEditor\__init__.py" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="build_infos.txt" />
+    <Content Include="PARMmenu.xml" />
+  </ItemGroup>
   <Import Project="$(PtvsTargetsFile)" Condition="Exists($(PtvsTargetsFile))" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" Condition="!Exists($(PtvsTargetsFile))" />
 </Project>
