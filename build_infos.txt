@@ -1,0 +1,4 @@
+$NAME:HoudiniExprEditor
+$DOC_LINK:cgtoolbox.com/houdini-expression-editor/
+scripts/python/HoudiniExprEditor:HoudiniExprEditor
+/:PARMmenu.xml
