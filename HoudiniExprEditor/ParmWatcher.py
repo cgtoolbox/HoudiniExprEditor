@@ -29,7 +29,7 @@ import tempfile
 from PySide2 import QtCore
 from PySide2 import QtWidgets
 
-TEMP_FOLDER = os.environ.get("ASYNC_EDIT_FOLDER",
+TEMP_FOLDER = os.environ.get("EXTERNAL_EDITOR_TEMP_PATH",
                              tempfile.gettempdir())
 
 ver = hou.applicationVersion()
