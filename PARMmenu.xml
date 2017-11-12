@@ -12,7 +12,7 @@
 
       <!-- External Editor -->
       
-      <addScriptItem id="h.open_external_editor">
+      <addScriptItem id="open_external_editor">
 			  <label>External Expression Editor</label>
         <parent>expression_menu</parent>
         <insertAfter>edit_expression</insertAfter>
@@ -31,7 +31,7 @@ from HoudiniExprEditor import ParmWatcher
 reload(ParmWatcher)
 ParmWatcher.add_watcher(kwargs["parms"][0])]]>
 			  </scriptCode>
-		  </addScriptItem>s
+		  </addScriptItem>
 
       <!-- Remove watcher -->
 
