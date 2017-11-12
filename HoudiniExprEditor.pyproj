@@ -34,6 +34,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="build_infos.txt" />
+    <Content Include="MainMenuCommon.xml" />
     <Content Include="PARMmenu.xml" />
   </ItemGroup>
   <Import Project="$(PtvsTargetsFile)" Condition="Exists($(PtvsTargetsFile))" />
