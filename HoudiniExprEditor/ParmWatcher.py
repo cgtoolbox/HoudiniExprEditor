@@ -120,6 +120,14 @@ def filechanged(file_name):
     try:
         if parm:
 
+            # check if the parm exists, if not, remove the file from watcher
+            try:
+                parm.parmTemplate()
+            except hou.ObjectWasDeleted:
+                remove_file_from_watcher(file_name)
+                del parms_bindings[file_name]
+                return
+
             with open(file_name, 'r') as f:
                 data = f.read()
             
@@ -273,16 +281,23 @@ def parm_has_watcher(parm):
 
     return False
 
+def remove_file_from_watcher(file_name):
+
+    watcher = get_file_watcher()
+    if file_name in watcher.files():
+        watcher.removePath(file_name)
+        return True
+
+    return False
+
 def remove_file_watched(parm):
     """ Check if a given parameter's watched file exist and remove it
         from watcher list, do not remove the file itself.
     """
     
     file_name = get_file_name(parm)
-    watcher = get_file_watcher()
-    if watcher:
-        if file_name in watcher.files():
-            watcher.removePath(file_name)
-            QtWidgets.QMessageBox.information(hou.ui.mainQtWindow(),
-                                              "Watcher Removed",
-                                              "Watcher removed on file: " + file_name)
+    r = remove_file_from_watcher(file_name)
+    if r:
+        QtWidgets.QMessageBox.information(hou.ui.mainQtWindow(),
+                                          "Watcher Removed",
+                                          "Watcher removed on file: " + file_name)
