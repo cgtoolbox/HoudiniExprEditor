@@ -32,11 +32,6 @@ from PySide2 import QtWidgets
 TEMP_FOLDER = os.environ.get("EXTERNAL_EDITOR_TEMP_PATH",
                              tempfile.gettempdir())
 
-ver = hou.applicationVersion()
-verStr = "houdini{}.{}".format(ver[0], ver[1])
-cfg = hou.expandString("$HOME") + os.sep + verStr + \
-        os.sep + "ExternalEditor.cfg"
-
 def is_valid_parm(parm):
 
     template = parm.parmTemplate()
@@ -59,11 +54,26 @@ def clean_exp(parm):
     if exp is not None:
         parm.deleteAllKeyframes()
 
+def get_config_file():
+
+    try:
+        return hou.findFile("ExternalEditor.cfg")
+    except hou.OperationFailed:
+        
+        ver = hou.applicationVersion()
+        verStr = "houdini{}.{}".format(ver[0], ver[1])
+        cfg = hou.expandString("$HOME") + os.sep + verStr + \
+                os.sep + "ExternalEditor.cfg"
+
+        return cfg
+
 def set_external_editor():
 
     r = QtWidgets.QFileDialog.getOpenFileName(hou.ui.mainQtWindow(),
                                                 "Select an external editor program")
     if r[0]:
+
+        cfg = get_config_file()
 
         with open(cfg, 'w') as f:
             f.write(r[0])
@@ -81,8 +91,9 @@ def set_external_editor():
 def get_external_editor():
 
     editor = os.environ.get("EDITOR")
-    if not editor:
+    if not editor or not os.path.exists(editor):
 
+        cfg = get_config_file()
         if os.path.exists(cfg):
             with open(cfg, 'r') as f:
                 editor = f.read().strip()
