@@ -23,6 +23,7 @@
 
 import hou
 import os
+import sys
 import subprocess
 import hdefereval
 import tempfile
@@ -61,9 +62,16 @@ def get_config_file():
     except hou.OperationFailed:
         
         ver = hou.applicationVersion()
-        verStr = "houdini{}.{}".format(ver[0], ver[1])
-        cfg = hou.expandString("$HOME") + os.sep + verStr + \
-                os.sep + "ExternalEditor.cfg"
+        if sys.platform in ["darwin", "os2", "os2emx"]:
+            verStr = "{}.{}".format(ver[0], ver[1])
+        else:
+            verStr = "houdini{}.{}".format(ver[0], ver[1])
+
+        cfg_root = hou.expandString("$HOME") + os.sep + verStr
+        if not os.path.exists(cfg_root):
+            os.makedirs(cfg_root)
+
+        cfg = cfg_root + os.sep + "ExternalEditor.cfg"
 
         return cfg
 
