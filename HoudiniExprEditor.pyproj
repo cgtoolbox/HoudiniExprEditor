@@ -12,31 +12,29 @@
     <OutputPath>.</OutputPath>
     <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <InterpreterId>{a7e3a1eb-5ab6-4f1e-8fe1-b73cebc0fced}</InterpreterId>
-    <InterpreterVersion>2.7</InterpreterVersion>
     <Name>HoudiniExprEditor</Name>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
   <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
   <PropertyGroup>
     <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
-    <PtvsTargetsFile>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets</PtvsTargetsFile>
   </PropertyGroup>
+  <ItemGroup />
   <ItemGroup>
-    <InterpreterReference Include="{a7e3a1eb-5ab6-4f1e-8fe1-b73cebc0fced}\2.7" />
+    <Folder Include="D:\__dev__\HoudiniPythonTools\HoudiniExprEditor\scripts\python\HoudiniExprEditor\" />
+    <Folder Include="scripts\" />
+    <Folder Include="scripts\python\" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="HoudiniExprEditor\" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="HoudiniExprEditor\ParmWatcher.py" />
-    <Compile Include="HoudiniExprEditor\__init__.py" />
+    <Compile Include="scripts\python\HoudiniExprEditor\ParmWatcher.py" />
+    <Compile Include="scripts\python\HoudiniExprEditor\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Content Include="build_infos.txt" />
     <Content Include="MainMenuCommon.xml" />
     <Content Include="PARMmenu.xml" />
   </ItemGroup>
-  <Import Project="$(PtvsTargetsFile)" Condition="Exists($(PtvsTargetsFile))" />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" Condition="!Exists($(PtvsTargetsFile))" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
 </Project>
