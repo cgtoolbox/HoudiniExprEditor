@@ -38,7 +38,7 @@ ParmWatcher.add_watcher(kwargs["parms"][0])]]>
       <addScriptItem id="remove_file_watcher">
         <label>Remove File Watcher</label>
         <parent>expression_menu</parent>
-        <insertAfter>h.open_external_editor</insertAfter>
+        <insertAfter>open_external_editor</insertAfter>
         <context>
           <expression>
             <![CDATA[
