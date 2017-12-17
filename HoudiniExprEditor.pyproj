@@ -24,6 +24,7 @@
     <Folder Include="D:\__dev__\HoudiniPythonTools\HoudiniExprEditor\scripts\python\HoudiniExprEditor\" />
     <Folder Include="scripts\" />
     <Folder Include="scripts\python\" />
+    <Folder Include="scripts\python\HoudiniExprEditor\" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="scripts\python\HoudiniExprEditor\ParmWatcher.py" />
