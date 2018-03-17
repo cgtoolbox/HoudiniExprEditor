@@ -1,0 +1,28 @@
+<menuDocument>
+  <!-- menuDocument can only contain 1 menu element, whose id is 
+         implicitly "root_menu"
+      -->
+  <menu>
+    <scriptItem id="expreditor_edit_python_code">
+      <label>Edit python source code</label>
+      <context>
+        <expression>
+          <![CDATA[
+try:
+  from HoudiniExprEditor import ParmWatcher
+  return ParmWatcher.is_python_node(kwargs["node"])
+except Exception as e:
+  return False]]>
+        </expression>
+      </context>
+      <scriptCode>
+        <![CDATA[
+from HoudiniExprEditor import ParmWatcher
+reload(ParmWatcher)
+ParmWatcher.add_watcher(kwargs["node"], type_="python_node")]]>
+      </scriptCode>
+    </scriptItem>
+
+
+  </menu>
+</menuDocument>

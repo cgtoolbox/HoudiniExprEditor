@@ -36,6 +36,7 @@
     <Content Include="build_infos.txt" />
     <Content Include="MainMenuCommon.xml" />
     <Content Include="PARMmenu.xml" />
+    <Content Include="scripts\python\HoudiniExprEditor\OPmenu.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
 </Project>

@@ -27,6 +27,7 @@ import sys
 import subprocess
 import hdefereval
 import tempfile
+import hashlib
 
 try:
     from PySide2 import QtCore
@@ -54,6 +55,16 @@ def is_valid_parm(parm):
                                hou.parmData.String]:
         return True
 
+    return False
+
+def is_python_node(node):
+
+    node_def = node.type().definition()
+    if not node_def:
+        return False
+
+    if node_def.sections().get("PythonCook") is not None:
+        return True
     return False
 
 def clean_exp(parm):
@@ -147,10 +158,27 @@ def filechanged(file_name):
     if not parms_bindings:
         return
 
-    parm = parms_bindings.get(file_name)
+    parm = None
+    node = None
 
     try:
-        if parm:
+
+        binding = parms_bindings.get(file_name)
+        if isinstance(binding, hou.Parm):
+            parm = binding
+        else:
+            node = binding
+
+        if node is not None:
+            try:
+                with open(file_name, 'r') as f:
+                    data = f.read()
+                node.type().definition().sections()["PythonCook"].setContents(data)
+            except hou.OperationFailed:
+                remove_file_from_watcher(file_name)
+            return
+
+        if parm is not None:
 
             # check if the parm exists, if not, remove the file from watcher
             try:
@@ -199,9 +227,12 @@ def filechanged(file_name):
     except Exception as e:
         print("Watcher error: " + str(e))
 
-def get_file_ext(parm):
+def get_file_ext(parm, type_="parm"):
     """ Get the file name's extention according to parameter's temaplate.
     """
+
+    if type_ == "python_node":
+        return ".py"
 
     template = parm.parmTemplate()
     editorlang = template.tags().get("editorlang", "").lower()
@@ -222,14 +253,20 @@ def get_file_ext(parm):
         except hou.OperationFailed:
             return ".txt"
 
-def get_file_name(parm):
+def get_file_name(data, type_="parm"):
     """ Construct an unique file name from a parameter with right extension.
     """
 
-    node = parm.node()
-    sid = str(node.sessionId())
-    file_name = sid + '_' + node.name() + '_' + parm.name() + get_file_ext(parm)
-    file_path = TEMP_FOLDER + os.sep + file_name
+    if type_ == "parm":
+        node = data.node()
+        sid = str(node.sessionId())
+        file_name = sid + '_' + node.name() + '_' + data.name() + get_file_ext(data)
+        file_path = TEMP_FOLDER + os.sep + file_name
+
+    elif type_ == "python_node":
+        sid = hashlib.sha1(data.path()).hexdigest()
+        file_name = sid + '_' + data.name() + get_file_ext(data, type_="python_node")
+        file_path = TEMP_FOLDER + os.sep + file_name
 
     return file_path
 
@@ -241,7 +278,39 @@ def get_parm_bindings():
 
     return getattr(hou.session, "PARMS_BINDINGS", None)
 
-def add_watcher(parm):
+def clean_files():
+
+    try:
+        bindings = get_parm_bindings()
+        watcher = get_file_watcher()
+        if bindings is not None and watcher is not None:
+            for k, v in bindings.iteritems():
+
+                if not os.path.exists(k):
+                    del bindings[k]
+                    remove_file_from_watcher(k)
+                else:
+                    try:
+                        v.path()
+                    except hou.ObjectWasDeleted:
+                        del bindings[k]
+                        remove_file_from_watcher(k)
+    except Exception as e:
+        print("HoudiniExprEditor: Can't clean files: " + str(e))
+
+def _node_deleted(node, **kwargs):
+
+    try:
+        file_name = get_file_name(node, type_="python_node")
+        bindings = get_parm_bindings()
+        if bindings:
+            if file_name in bindings.keys():
+                del bindings[file_name]
+        remove_file_from_watcher(file_name)
+    except Exception as e:
+        print("Error un callback: onDelete: " + str(e))
+
+def add_watcher(selection, type_="parm"):
     """ Create a file with the current parameter contents and 
         create a file watcher, if not already created and found in hou.Session,
         add the file to the list of watched files.
@@ -250,17 +319,16 @@ def add_watcher(parm):
         and when the file changed, edit the parameter contents with text contents.
     """
 
-    file_path = get_file_name(parm)
-
-    if os.path.exists(file_path):
-        os.remove(file_path)
-
-
+    file_path = get_file_name(selection, type_=type_)
+    
+    if type_ == "parm":
     # fetch parm content, either raw value or expression if any
-    try:
-        data = parm.expression()
-    except hou.OperationFailed:
-        data = str(parm.eval())
+        try:
+            data = selection.expression()
+        except hou.OperationFailed:
+            data = str(selection.eval())
+    elif type_ == "python_node":
+        data = selection.type().definition().sections()["PythonCook"].contents()
 
     with open(file_path, 'w') as f:
         f.write(data)
@@ -293,7 +361,18 @@ def add_watcher(parm):
         hou.session.PARMS_BINDINGS = {}
         parms_bindings = hou.session.PARMS_BINDINGS
 
-    parms_bindings[file_path] = parm
+    if not file_path in parms_bindings.keys():
+
+        parms_bindings[file_path] = selection
+
+        # add "on removed" callback to remove file from watcher
+        # when node is deleted
+        if type_ == "python_node":
+            
+            selection.addEventCallback((hou.nodeEventType.BeingDeleted,),
+                                       _node_deleted)
+
+    clean_files()
 
 def parm_has_watcher(parm):
     """ Check if a parameter has a watcher attached to it
@@ -312,6 +391,8 @@ def parm_has_watcher(parm):
         return True
 
     return False
+
+
 
 def remove_file_from_watcher(file_name):
 
