@@ -1,5 +1,7 @@
+$VERSION:scripts/python/HoudiniExprEditor/__init__.py
 $NAME:HoudiniExprEditor
 $DOC_LINK:cgtoolbox.com/houdini-expression-editor/
 scripts:scripts
 /:PARMmenu.xml
 /:MainMenuCommon.xml
+/:OPmenu.xml
