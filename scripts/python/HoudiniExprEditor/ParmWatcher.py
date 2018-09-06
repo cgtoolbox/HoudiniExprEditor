@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # MIT License
 # 
 # Copyright (c) 2017 Guillaume Jobst, www.cgtoolbox.com
@@ -141,7 +143,8 @@ def get_external_editor():
         r = QtWidgets.QMessageBox.information(hou.ui.mainQtWindow(),
                                              "Editor not set",
                                              "No external editor set, pick one ?",
-                                             "Yes", "Cancel")
+                                             QtWidgets.QMessageBox.Yes,
+                                             QtWidgets.QMessageBox.Cancel)
         if r == 1:
             return
 
