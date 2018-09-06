@@ -145,7 +145,7 @@ def get_external_editor():
                                              "No external editor set, pick one ?",
                                              QtWidgets.QMessageBox.Yes,
                                              QtWidgets.QMessageBox.Cancel)
-        if r == 1:
+        if r == QtWidgets.QMessageBox.Cancel:
             return
 
         return set_external_editor()
