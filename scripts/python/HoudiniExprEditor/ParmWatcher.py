@@ -81,6 +81,20 @@ def clean_exp(parm):
     if exp is not None:
         parm.deleteAllKeyframes()
 
+def get_extra_file_scripts(node):
+    
+    node_def = node.type().definition()
+
+    if node_def is None:
+        return []
+
+    extra_file_options = node_def.extraFileOptions()
+    pymodules = [m.split('/')[0] for m in extra_file_options.keys() \
+                 if "IsPython" in m \
+                 and extra_file_options[m]]
+
+    return pymodules
+
 def get_config_file():
 
     try:
@@ -176,7 +190,12 @@ def filechanged(file_name):
             try:
                 with open(file_name, 'r') as f:
                     data = f.read()
-                node.type().definition().sections()["PythonCook"].setContents(data)
+
+                section = "PythonCook"
+                if "_extraSection_" in file_name:
+                    section = file_name.split("_extraSection_")[-1].split('.')[0]
+
+                node.type().definition().sections()[section].setContents(data)
             except hou.OperationFailed:
                 remove_file_from_watcher(file_name)
             return
@@ -266,9 +285,14 @@ def get_file_name(data, type_="parm"):
         file_name = sid + '_' + node.name() + '_' + data.name() + get_file_ext(data)
         file_path = TEMP_FOLDER + os.sep + file_name
 
-    elif type_ == "python_node":
+    elif type_ == "python_node" or "extra_section|" in type_:
         sid = hashlib.sha1(data.path()).hexdigest()
-        file_name = sid + '_' + data.name() + get_file_ext(data, type_="python_node")
+
+        name = data.name()
+        if "extra_section;" in type_:
+            name += "_extraSection_" + type_.split('|')[-1]
+
+        file_name = sid + '_' + name + get_file_ext(data, type_="python_node")
         file_path = TEMP_FOLDER + os.sep + file_name
 
     return file_path
@@ -313,6 +337,20 @@ def _node_deleted(node, **kwargs):
     except Exception as e:
         print("Error un callback: onDelete: " + str(e))
 
+def add_watcher_to_section(selection):
+    
+
+    sel_def = selection.type().definition()
+    if not sel_def: return
+
+    sections = get_extra_file_scripts(selection)
+    r = hou.ui.selectFromList(sections, exclusive=True,
+                              title="Pick a section:")
+    if not r: return
+
+    section = sections[r[0]]
+    add_watcher(selection, type_="extra_section|" + section)
+
 def add_watcher(selection, type_="parm"):
     """ Create a file with the current parameter contents and 
         create a file watcher, if not already created and found in hou.Session,
@@ -332,6 +370,14 @@ def add_watcher(selection, type_="parm"):
             data = str(selection.eval())
     elif type_ == "python_node":
         data = selection.type().definition().sections()["PythonCook"].contents()
+
+    elif "extra_section|" in type_:
+
+        sec_name = type_.split('|')[-1]
+        sec = selection.type().definition().sections().get(sec_name)
+        if not sec:
+            print("Error: No section {} found.".format(sec))
+        data = sec.contents()
 
     with open(file_path, 'w') as f:
         f.write(data)
@@ -370,7 +416,7 @@ def add_watcher(selection, type_="parm"):
 
         # add "on removed" callback to remove file from watcher
         # when node is deleted
-        if type_ == "python_node":
+        if type_ == "python_node" or "extra_section|" in type_:
             
             selection.addEventCallback((hou.nodeEventType.BeingDeleted,),
                                        _node_deleted)
