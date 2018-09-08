@@ -289,7 +289,7 @@ def get_file_name(data, type_="parm"):
         sid = hashlib.sha1(data.path()).hexdigest()
 
         name = data.name()
-        if "extra_section;" in type_:
+        if "extra_section|" in type_:
             name += "_extraSection_" + type_.split('|')[-1]
 
         file_name = sid + '_' + name + get_file_ext(data, type_="python_node")
