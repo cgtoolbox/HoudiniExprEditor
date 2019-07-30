@@ -26,6 +26,7 @@
 import hou
 import os
 import sys
+import time
 import subprocess
 import hdefereval
 import tempfile
@@ -166,6 +167,22 @@ def get_external_editor():
 
     return None
 
+def _read_file_data(file_name):
+    # Some external editor ( like VSCode ) empty the file before saving it
+    # this will trigger the file watcher and will read empty data. We try
+    # to read it again after half a second to be sure the data is really empty or not.
+    # For VSCode: https://github.com/microsoft/vscode/pull/62296
+
+    with open(file_name, 'r') as f:
+        data = f.read()
+                
+    if data == '':
+        time.sleep(0.5)
+        with open(file_name, 'r') as f:
+            data = f.read()
+
+    return data
+
 @QtCore.Slot(str)
 def filechanged(file_name):
     """ Signal emitted by the watcher to update the parameter contents.
@@ -188,15 +205,20 @@ def filechanged(file_name):
 
         if node is not None:
             try:
-                with open(file_name, 'r') as f:
-                    data = f.read()
+                data = _read_file_data(file_name)
 
                 section = "PythonCook"
                 if "_extraSection_" in file_name:
                     section = file_name.split("_extraSection_")[-1].split('.')[0]
-
+                
+                # Block file watcher during module section update to prevent infinite loops in certain cases
+                watcher = get_file_watcher()
+                watcher.blockSignals(True)
                 node.type().definition().sections()[section].setContents(data)
-            except hou.OperationFailed:
+                watcher.blockSignals(False)
+                
+            except hou.OperationFailed as e:
+                print("HoudiniExprEditor: Can't update module content {}, watcher will be removed.".format(e))
                 remove_file_from_watcher(file_name)
             return
 
@@ -210,8 +232,7 @@ def filechanged(file_name):
                 del parms_bindings[file_name]
                 return
 
-            with open(file_name, 'r') as f:
-                data = f.read()
+            data = _read_file_data(file_name)
             
             template = parm.parmTemplate()
             if template.dataType() == hou.parmData.String:
