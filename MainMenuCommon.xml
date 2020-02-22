@@ -24,5 +24,29 @@ ParmWatcher.set_external_editor()]]>
       </scriptCode>
     </addScriptItem>
 
+    <!-- Open session module source watcher -->
+
+    <addScriptItem id="external_python_source_editor">
+      <label>External Python Source Editor</label>
+      <parent>windows_menu</parent>
+      <insertAfter>h.python_source_editor</insertAfter>
+      <context>
+        <expression>
+          <![CDATA[
+try:
+  from HoudiniExprEditor import ParmWatcher
+  return True
+except Exception as e:
+  return False]]>
+        </expression>
+      </context>
+      <scriptCode>
+        <![CDATA[
+from HoudiniExprEditor import ParmWatcher
+reload(ParmWatcher)
+ParmWatcher.add_watcher("__temp__python_source_editor", type_="__temp__python_source_editor")]]>
+      </scriptCode>
+    </addScriptItem>
+
   </menu>
 </mainMenu>

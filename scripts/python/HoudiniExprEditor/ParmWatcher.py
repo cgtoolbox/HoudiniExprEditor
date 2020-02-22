@@ -2,7 +2,7 @@
 
 # MIT License
 # 
-# Copyright (c) 2017 Guillaume Jobst, www.cgtoolbox.com
+# Copyright (c) 2017-2020 Guillaume Jobst, www.cgtoolbox.com
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -202,6 +202,15 @@ def filechanged(file_name):
             parm = binding
         else:
             node = binding
+        
+        if binding == "__temp__python_source_editor":
+
+            data = _read_file_data(file_name)
+            try:
+                hou.setSessionModuleSource(data)
+            except hou.OperationFailed:
+                print("Watcher error: Invalid source code.")
+            return
 
         if node is not None:
             try:
@@ -316,6 +325,11 @@ def get_file_name(data, type_="parm"):
         file_name = sid + '_' + name + get_file_ext(data, type_="python_node")
         file_path = TEMP_FOLDER + os.sep + file_name
 
+    elif type_ == "__temp__python_source_editor":
+        
+        file_name = "__python_source_editor.py"
+        file_path = TEMP_FOLDER + os.sep + file_name
+
     return file_path
 
 def get_file_watcher():
@@ -337,6 +351,9 @@ def clean_files():
                 if not os.path.exists(k):
                     del bindings[k]
                     remove_file_from_watcher(k)
+                elif v == "__temp__python_source_editor":
+                    # never clean python source editor as it can't be deleted.
+                    pass
                 else:
                     try:
                         v.path()
@@ -399,6 +416,10 @@ def add_watcher(selection, type_="parm"):
         if not sec:
             print("Error: No section {} found.".format(sec))
         data = sec.contents()
+    
+    elif type_ == "__temp__python_source_editor":
+        
+        data = hou.sessionModuleSource()
 
     with open(file_path, 'w') as f:
         f.write(data)
