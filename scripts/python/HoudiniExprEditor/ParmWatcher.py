@@ -345,21 +345,27 @@ def clean_files():
     try:
         bindings = get_parm_bindings()
         watcher = get_file_watcher()
+        keys_to_delete = []
+
         if bindings is not None and watcher is not None:
             for k, v in bindings.iteritems():
-
-                if not os.path.exists(k):
-                    del bindings[k]
-                    remove_file_from_watcher(k)
-                elif v == "__temp__python_source_editor":
+                
+                if isinstance(v, str) and v == "__temp__python_source_editor":
                     # never clean python source editor as it can't be deleted.
-                    pass
+                    continue
+                elif not os.path.exists(k):
+                    remove_file_from_watcher(k)
+                    keys_to_delete.append(k)
                 else:
                     try:
                         v.path()
                     except hou.ObjectWasDeleted:
-                        del bindings[k]
                         remove_file_from_watcher(k)
+                        keys_to_delete.append(k)
+
+        for k in keys_to_delete:
+            del bindings[k]
+            
     except Exception as e:
         print("HoudiniExprEditor: Can't clean files: " + str(e))
 
