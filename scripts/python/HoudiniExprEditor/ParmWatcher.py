@@ -196,20 +196,24 @@ def filechanged(file_name):
     node = None
 
     try:
-
         binding = parms_bindings.get(file_name)
         if isinstance(binding, hou.Parm):
             parm = binding
         else:
             node = binding
         
-        if binding == "__temp__python_source_editor":
+        try:
+            if binding == "__temp__python_source_editor":
 
-            data = _read_file_data(file_name)
-            try:
-                hou.setSessionModuleSource(data)
-            except hou.OperationFailed:
-                print("Watcher error: Invalid source code.")
+                data = _read_file_data(file_name)
+                try:
+                    hou.setSessionModuleSource(data)
+                except hou.OperationFailed:
+                    print("Watcher error: Invalid source code.")
+                return
+        except hou.ObjectWasDeleted:
+            remove_file_from_watcher(file_name)
+            del parms_bindings[file_name]
             return
 
         if node is not None:
@@ -229,6 +233,7 @@ def filechanged(file_name):
             except hou.OperationFailed as e:
                 print("HoudiniExprEditor: Can't update module content {}, watcher will be removed.".format(e))
                 remove_file_from_watcher(file_name)
+                del parms_bindings[file_name]
             return
 
         if parm is not None:
@@ -348,7 +353,7 @@ def clean_files():
         keys_to_delete = []
 
         if bindings is not None and watcher is not None:
-            for k, v in bindings.iteritems():
+            for k, v in bindings.items():
                 
                 if isinstance(v, str) and v == "__temp__python_source_editor":
                     # never clean python source editor as it can't be deleted.
@@ -488,8 +493,6 @@ def parm_has_watcher(parm):
         return True
 
     return False
-
-
 
 def remove_file_from_watcher(file_name):
 

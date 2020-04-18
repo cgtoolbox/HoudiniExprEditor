@@ -19,7 +19,11 @@
       <scriptCode>
         <![CDATA[
 from HoudiniExprEditor import ParmWatcher
-reload(ParmWatcher)
+try:
+  reload(ParmWatcher)
+except NameError:
+  from importlib import reload
+  reload(ParmWatcher)
 ParmWatcher.set_external_editor()]]>
       </scriptCode>
     </addScriptItem>
@@ -43,7 +47,11 @@ except Exception as e:
       <scriptCode>
         <![CDATA[
 from HoudiniExprEditor import ParmWatcher
-reload(ParmWatcher)
+try:
+  reload(ParmWatcher)
+except NameError:
+  from importlib import reload
+  reload(ParmWatcher)
 ParmWatcher.add_watcher("__temp__python_source_editor", type_="__temp__python_source_editor")]]>
       </scriptCode>
     </addScriptItem>
