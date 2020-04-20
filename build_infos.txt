@@ -5,3 +5,4 @@ scripts:scripts
 /:PARMmenu.xml
 /:MainMenuCommon.xml
 /:OPmenu.xml
+/:ShelfToolMenu.xml
