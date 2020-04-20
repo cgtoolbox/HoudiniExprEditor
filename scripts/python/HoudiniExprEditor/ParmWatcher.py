@@ -194,11 +194,14 @@ def filechanged(file_name):
 
     parm = None
     node = None
+    tool = None
 
     try:
         binding = parms_bindings.get(file_name)
         if isinstance(binding, hou.Parm):
             parm = binding
+        elif isinstance(binding, hou.Tool):
+            tool = binding
         else:
             node = binding
         
@@ -214,6 +217,16 @@ def filechanged(file_name):
         except hou.ObjectWasDeleted:
             remove_file_from_watcher(file_name)
             del parms_bindings[file_name]
+            return
+
+        if tool is not None:
+            data = _read_file_data(file_name)
+            try:
+                tool.setScript(data)
+            except hou.ObjectWasDeleted:
+                remove_file_from_watcher(file_name)
+                del parms_bindings[file_name]
+                return
             return
 
         if node is not None:
@@ -330,6 +343,15 @@ def get_file_name(data, type_="parm"):
         file_name = sid + '_' + name + get_file_ext(data, type_="python_node")
         file_path = TEMP_FOLDER + os.sep + file_name
 
+    elif type_.startswith("__shelf_tool|"):
+
+        language = type_.split('|')[-1]
+        if language == "python":
+            file_name = "__shelf_tool_" + data.name() + ".py"
+        else:
+            file_name = "__shelf_tool_" + data.name() + ".txt"
+        file_path = TEMP_FOLDER + os.sep + file_name
+
     elif type_ == "__temp__python_source_editor":
         
         file_name = "__python_source_editor.py"
@@ -361,12 +383,21 @@ def clean_files():
                 elif not os.path.exists(k):
                     remove_file_from_watcher(k)
                     keys_to_delete.append(k)
+                elif isinstance(v, hou.Tool):
+                    try:
+                        v.filePath()
+                    except hou.ObjectWasDeleted:
+                        remove_file_from_watcher(k)
+                        keys_to_delete.append(k)
                 else:
                     try:
                         v.path()
                     except hou.ObjectWasDeleted:
                         remove_file_from_watcher(k)
                         keys_to_delete.append(k)
+
+                if not k in watcher.files():
+                    keys_to_delete.append(k)
 
         for k in keys_to_delete:
             del bindings[k]
@@ -388,7 +419,6 @@ def _node_deleted(node, **kwargs):
 
 def add_watcher_to_section(selection):
     
-
     sel_def = selection.type().definition()
     if not sel_def: return
 
@@ -431,6 +461,10 @@ def add_watcher(selection, type_="parm"):
     elif type_ == "__temp__python_source_editor":
         
         data = hou.sessionModuleSource()
+
+    elif type_.startswith("__shelf_tool|"):
+    
+        data = selection.script()
 
     with open(file_path, 'w') as f:
         f.write(data)
@@ -494,6 +528,24 @@ def parm_has_watcher(parm):
 
     return False
 
+def tool_has_watcher(tool, type_=""):
+    """ Check if a shelf tool has a watcher attached to it
+        Used to display or hide "Remove Watcher" menu.
+    """
+    file_name = get_file_name(tool, type_=type_)
+    watcher = get_file_watcher()
+    if not watcher:
+        return False
+
+    parms_bindings = get_parm_bindings()
+    if not parms_bindings:
+        return False
+
+    if file_name in parms_bindings.keys():
+        return True
+
+    return False
+
 def remove_file_from_watcher(file_name):
 
     watcher = get_file_watcher()
@@ -503,14 +555,15 @@ def remove_file_from_watcher(file_name):
 
     return False
 
-def remove_file_watched(parm):
+def remove_file_watched(parm, type_="parm"):
     """ Check if a given parameter's watched file exist and remove it
         from watcher list, do not remove the file itself.
     """
     
-    file_name = get_file_name(parm)
+    file_name = get_file_name(parm, type_=type_)
     r = remove_file_from_watcher(file_name)
     if r:
+        clean_files()
         QtWidgets.QMessageBox.information(hou.ui.mainQtWindow(),
                                           "Watcher Removed",
                                           "Watcher removed on file: " + file_name)
