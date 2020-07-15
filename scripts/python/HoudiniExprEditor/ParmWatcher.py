@@ -446,7 +446,10 @@ def add_watcher(selection, type_="parm"):
         try:
             data = selection.expression()
         except hou.OperationFailed:
-            data = str(selection.eval())
+            if os.environ.get("EXTERNAL_EDITOR_EVAL_EXPRESSION") == '1':
+                data = str(selection.eval())
+            else:
+                data = str(selection.rawValue())
     elif type_ == "python_node":
         data = selection.type().definition().sections()["PythonCook"].contents()
 
