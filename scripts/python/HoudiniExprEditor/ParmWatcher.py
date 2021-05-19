@@ -251,6 +251,7 @@ def filechanged(file_name):
             template = parm.parmTemplate()
             if template.dataType() == hou.parmData.String:
                 parm.set(data)
+                parm.pressButton()
                 return
 
             if template.dataType() == hou.parmData.Float:
@@ -261,6 +262,7 @@ def filechanged(file_name):
                     clean_exp(parm)
                         
                     parm.set(data)
+                    parm.pressButton()
                     return
 
                 except ValueError:
@@ -275,6 +277,7 @@ def filechanged(file_name):
                     clean_exp(parm)
 
                     parm.set(data)
+                    parm.pressButton()
                     return
 
                 except ValueError:
