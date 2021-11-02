@@ -459,8 +459,12 @@ def add_watcher(selection, type_="parm"):
     
         data = selection.script()
 
+    # use uft-8 only when nacessary
     with open(file_path, 'w') as f:
-        f.write(data)
+        try:
+            f.write(data)
+        except UnicodeEncodeError:
+            f.write(data.encode("UTF-8"))
 
     vsc = get_external_editor()
     if not vsc:
